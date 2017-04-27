@@ -1,0 +1,105 @@
+\documentclass[10pt,draftclsnofoot,onecolumn, compsoc]{IEEEtran}
+\usepackage{geometry}
+\geometry{textheight=9.5in, textwidth=7in}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{setspace}
+
+\singlespacing
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+
+
+\begin{document}
+%\title{Team 13-03}
+%\author{Joseph Struth  |  Josh Asher  |   Bryan Liauw}
+%\date{}
+%\maketitle
+\begin{titlepage}
+	\centering
+	{\scshape\LARGE Team 13-03 \par}
+	\vspace{1cm}
+	{\scshape\Large Joseph Struth  |  Josh Asher  |   Bryan Liauw\par}
+	\vspace{1.5cm}
+	{\huge\bfseries CS444\par}
+	\vspace{2cm}
+	{\Large\itshape Spring 2017\par}
+	\vspace{4cm}
+	{\large Abstract\par}
+	\vspace{1cm}
+	Our first venture into this class envolves getting used to the tools and evironment we will be working in.
+	This document takes you through the process of setting up a Qemu virtual machine, compiling a kernel, and 
+	getting it running. We also dive into our first concurrecny assigment which is a simple producer consumer 
+	look at concurrent programming. We need these basic steps in preperation of the harder one to come.
+	\vfill
+
+% Bottom of the page
+	{\large \today\par}
+\end{titlepage}
+
+
+\section{Command Log}
+\begin{enumerate}
+        \item {\bf mkdir /scratch/spring2017/13-03 } - Create our directory.
+        \item {\bf cd /scratch/spring2017/13-03} - Change into that directory.
+        \item {\bf git clone git://git.yoctoproject.org/linux-yocto-3.14} - Clone the yocto 3.14 repo into our directory.
+        \item {\bf cd linux-yocto-3.14} - Change to yocto directory.
+        \item {\bf git checkout v3.14.26} - Checkout the v3.14.26 branch of yocto.
+        \item {\bf source /scratch/opt/environment-setup- i586-poky- linux.csh} - To set the proper environmental variables for when we compile.
+        \item {\bf cp /scratch/spring2017/files/config-3.14.26- yocto-qemu .config} - Copy over the example configuration file for the kernel.
+        \item {\bf make menuconfig} - Opens the kernel configuration menu.
+        \item {\bf /} - Open menu config search.
+        \item {\bf LOCALVERSION} - Locate the local version, hit 1 to change it.
+        \item {\bf -13-03-hw1} - Change LOCALVERSIOn to our group name.
+        \item {\bf make -j4 all} - Start compilation of the kernel.
+        \item {\bf gdb} - Open gdb, do this from another terminal or using screen.
+        \item {\bf cp /scratch/spring2017/files/bzImage-qemux86.bin} - Copy practice kernel into our directory.
+        \item {\bf cp /scratch/spring2017/files/core-image- lsb-sdk-qemux86.ext3 .} - Copy virtual machine into our directory.
+        \item {\bf qemu-system-i386 -gdb tcp::5633 -S -nographic -kernel bzImage-qemux86.bin -drive file=core-image-lsb-sdk- qemux86.ext3,if=virtio -enable-kv$
+        \item {\bf target remot :5633} - This is done in the gdb screen to connect to the virtual machine.
+        \item {\bf continue} - This is done in the gdb screen to let the kernel conintue loading, as it was paused on launch.
+        \item {\bf root} - On the VM screen, used to login to Linux.
+        \item {\bf uname -a} - Displays information from the practice kernel about its version.
+        \item {\bf reboot} - Reboots the VM, which actually shuts it down.
+        \item {\bf qemu-system-i386 -gdb tcp::5633 -S -nographic -kernel linux-yocto-3.14/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk- qemux86.ext3,i$
+        \item {\bf target remote :5633} - From gdb window log into our VM running our kernel.
+        \item {\bf continue} - From gdb window allow the kernel to continue loading.\
+        \item {\bf root} - Login to our kernel.
+        \item {\bf uname -a} - Check that our change to LOCALVERSION was correct by display the kernel version information.
+        \item {\bf reboot} - Shut down our VM.
+\end{enumerate}
+
+\section{Qemu Flags}
+\begin{itemize}
+        \item {\bf qemu-system-i386}  The QEMU 32 bit program.
+        \item {\bf -gdb tcp::5633}  Wait for gdb connection on tcp port 5633.
+        \item {\bf -S} Do not start CPU at startup.
+        \item {\bf -nographic} Disables VGA output so no graphics are displayed$
+        \item {\bf -kernel linux-yocto-3.14/arch/x86/boot/bzImage} Select which$
+        \item {\bf -drive} Select a new drive.
+        \item {\bf file=} Option of drive command (which are separated by comma$
+        \item {\bf if=} Defines what type of interface the drive is connected t$
+        \item {\bf -enable-kvm} Enable the Kernel-based Virtual machine.
+        \item {\bf -net none} Do not configure any network devices.
+        \item {\bf -usb} Enable usb drivers.
+        \item {\bf -localtime} Couldn't find this on the man page, I am guessin$
+        \item {\bf --no-reboot} Exit instead of rebooting.
+        \item {\bf --append "root=/dev/vda rw console=ttyS0 debug"} Use the fol$
+\end{itemize}
+
+\section{Concurrency Questions}
+Concurrency Questions
+\subsection{Question 1}
+The main point of this assignment is that this is a simple concurrency problem where only two threads interact with each other through a common middle ground, which is the buffer. Since there are only two threads, locking and accessing and maintaining it is rather basic; perfect for a first introductory assignment. 
+\subsection{Question 2}
+A way we approach this problem is to first create the 3 components of the program: the producer, consumer and buffer. This is done by doing the functions for the consumer and producer first before worrying about getting random value to determine how long the items live in the buffer. After getting the desired interactions between the two functions and the buffer, we implemented the random afterwards. 
+\subsection{Question 3}
+We go through the testing by first testing how the program works under normal circumstances without the extreme in the constraints. After it works, we tested it with the constraints, which is manipulating the time to consume to make it fill the buffer until it is full. Afterwards, if it already works under this constraint we will go to the next constraint which is empty buffer. If this has worked too, we can assume this would work under most circumstances.
+\subsection{Question 4}
+We learn how to do basic concurrency problems. This assignment helps us remember how to do basic thread programming from our 344 class. Since this is pretty basic, it helps us get to speed and therefore does not overwhelm us. 
+
+\section{Git Log}
+our git log
+
+\section{Work Log}
+\end{document}

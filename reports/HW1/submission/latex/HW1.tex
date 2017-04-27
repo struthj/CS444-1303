@@ -1,0 +1,147 @@
+\documentclass[10pt,draftclsnofoot,onecolumn, compsoc]{IEEEtran}
+\usepackage{geometry}
+\geometry{textheight=9.5in, textwidth=7in}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{setspace}
+\usepackage{hyperref}
+
+\singlespacing
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+
+
+\begin{document}
+%\title{Team 13-03}
+%\author{Joseph Struth  |  Josh Asher  |   Bryan Liauw}
+%\date{}
+%\maketitle
+\begin{titlepage}
+	\centering
+	{\scshape\LARGE Team 13-03 \par}
+	\vspace{1cm}
+	{\scshape\Large Joseph Struth  |  Josh Asher  |   Bryan Liauw\par}
+	\vspace{1.5cm}
+	{\huge\bfseries CS444\par}
+	\vspace{2cm}
+	{\Large\itshape Spring 2017\par}
+	\vspace{4cm}
+	{\large Abstract\par}
+	\vspace{1cm}
+	Our first venture into this class involves getting used to the tools and environment we will be working in.
+	This document takes you through the process of setting up a Qemu virtual machine, compiling a kernel, and
+	getting it running. We also dive into our first concurrency assignment which is a simple producer consumer
+	look at concurrent programming. We need these basic steps in preparation of the harder one to come.
+	\vfill
+
+% Bottom of the page
+	{\large \today\par}
+\end{titlepage}
+
+
+\section{Command Log}
+\begin{enumerate}
+	\item {\bf mkdir /scratch/spring2017/13-03 } - Create our directory.
+	\item {\bf cd /scratch/spring2017/13-03} - Change into that directory.
+	\item {\bf git clone git://git.yoctoproject.org/linux-yocto-3.14} - Clone the yocto 3.14 repo into our directory.
+	\item {\bf cd linux-yocto-3.14} - Change to yocto directory.
+	\item {\bf git checkout v3.14.26} - Checkout the v3.14.26 branch of yocto.
+	\item {\bf source /scratch/opt/environment-setup- i586-poky- linux.csh} - To set the proper environmental variables for when we compile.
+	\item {\bf cp /scratch/spring2017/files/config-3.14.26- yocto-qemu .config} - Copy over the example configuration file for the kernel.
+	\item {\bf make menuconfig} - Opens the kernel configuration menu.
+	\item {\bf /} - Open menu config search.
+	\item {\bf LOCALVERSION} - Locate the local version, hit 1 to change it.
+	\item {\bf -13-03-hw1} - Change LOCALVERSIOn to our group name.
+	\item {\bf make -j4 all} - Start compilation of the kernel.
+	\item {\bf gdb} - Open gdb, do this from another terminal or using screen.
+	\item {\bf cp /scratch/spring2017/files/bzImage-qemux86.bin} - Copy practice kernel into our directory.
+	\item {\bf cp /scratch/spring2017/files/core-image- lsb-sdk-qemux86.ext3 .} - Copy virtual machine into our directory.
+	\item {\bf qemu-system-i386 -gdb tcp::5633 -S -nographic -kernel bzImage-qemux86.bin -drive file=core-image-lsb-sdk- qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"} - To launch the virtual machine using the practice kernel.
+	\item {\bf target remot :5633} - This is done in the gdb screen to connect to the virtual machine.
+	\item {\bf continue} - This is done in the gdb screen to let the kernel conintue loading, as it was paused on launch.
+	\item {\bf root} - On the VM screen, used to login to Linux.
+	\item {\bf uname -a} - Displays information from the practice kernel about its version.
+	\item {\bf reboot} - Reboots the VM, which actually shuts it down.
+	\item {\bf qemu-system-i386 -gdb tcp::5633 -S -nographic -kernel linux-yocto-3.14/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk- qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"} - Run the copy of the kernel we compiled that has the altered LOCALVERSION variable.
+	\item {\bf target remote :5633} - From gdb window log into our VM running our kernel.
+	\item {\bf continue} - From gdb window allow the kernel to continue loading.\
+	\item {\bf root} - Login to our kernel.
+	\item {\bf uname -a} - Check that our change to LOCALVERSION was correct by display the kernel version information.
+	\item {\bf reboot} - Shut down our VM.
+\end{enumerate}
+
+\section{Qemu Flags}
+\begin{itemize}
+	\item {\bf qemu-system-i386}  The QEMU 32 bit program.
+	\item {\bf -gdb tcp::5633}  Wait for gdb connection on tcp port 5633.
+	\item {\bf -S} Do not start CPU at startup.
+	\item {\bf -nographic} Disables VGA output so no graphics are displayed for the output. The serial port is directed to your console.
+	\item {\bf -kernel linux-yocto-3.14/arch/x86/boot/bzImage} Select which bzImage to use. In our case the one we compiled.
+	\item {\bf -drive} Select a new drive.
+	\item {\bf file=} Option of drive command (which are separated by commas), name of drive file you want ot use goes after the equals.
+	\item {\bf if=} Defines what type of interface the drive is connected to. In our case virtio.
+	\item {\bf -enable-kvm} Enable the Kernel-based Virtual machine.
+	\item {\bf -net none} Do not configure any network devices.
+	\item {\bf -usb} Enable usb drivers.
+	\item {\bf -localtime} Couldn't find this on the man page, I am guessing it uses the computer local time.
+	\item {\bf --no-reboot} Exit instead of rebooting.
+	\item {\bf --append "root=/dev/vda rw console=ttyS0 debug"} Use the following command line for the Linux command line.
+\end{itemize}
+
+\section{Concurrency Questions}
+\subsection{Question 1}
+The main point of this assignment is that this is a simple concurrency problem where only two threads interact with each other through a common middle ground buffer. Since there are only two threads, locking and accessing and maintaining it is rather basic.
+\subsection{Question 2}
+A way we approach this problem is to first create the 3 components of the program: the producer, consumer and buffer. This is done by doing the functions for the consumer and producer first before worrying about getting random value to determine how long the items live in the buffer. After getting the desired interactions between the two functions and the buffer, we implemented the random afterwards.
+\subsection{Question 3}
+We go through the testing by first testing how the program works under normal circumstances without the extreme in the constraints. After it works, we tested it with the constraints, which is manipulating the time to consume to make it fill the buffer until it is full. Afterwards, if it already works under this constraint we will go to the next constraint which is empty buffer. If this has worked too, we can assume this would work under most circumstances.
+\subsection{Question 4}
+We learn how to do basic concurrency problems. This assignment helps us remember how to do basic thread programming from our 344 class. Since this is pretty basic, it helps us get to speed and therefore does not overwhelm us.
+
+
+\section{Git Log}
+\begin{tabular}{| l | l | p{15cm} |}\textbf{Detail} & \textbf{Author} & \textbf{Description}\\\hline
+\href{ssh://asherj@os-class.engr.oregonstate.edu/scratch/spring2017/13-03/commit/805c492e98007c3a790adbf9a93510e3d1554b9e}{805c492} & Joshua Asher & Added the reports direcotry with tex template for homework.\\\hline
+\href{https://github.com/struthj/CS444/commit/2aaa9a33b6a922d936a45512e0bffbca55d9d4f2}{2aaa9a3} & Joseph Struth & Concurrency 1 started.\\\hline
+\href{https://github.com/struthj/CS444/commit/3327a672e51047c431ab8a26d943fffddae5094d}{3327a67} & Joseph Struth & Added references.\\\hline
+\href{https://github.com/struthj/CS444/commit/6c10892626887f58e4adbe5eb75aba47de8fc502}{6c10892} & Joseph Struth & Concurrency 1 mostly finished, resize works correctly.\\\hline
+\href{ssh://asherj@os-class.engr.oregonstate.edu/scratch/spring2017/13-03/commit/d0274e9f69f9eaf63240fb412118aa80ac17c95c}{d0274e9} & Joshua Asher & Added command log to HW1.tex.\\\hline
+\href{ssh://asherj@os-class.engr.oregonstate.edu/scratch/spring2017/13-03/commit/ab7a9b7f1f030f5833b1f23f416d8fab0e95cb72}{ab7a9b7} & Joshua Asher & Commiting Changes to HW1.tex, didn't work remotely\\\hline
+\href{ssh://liauwb@os-class.engr.oregonstate.edu/scratch/spring2017/13-03/commit/be8839aa4b12089b34597dbc92bb1d5bdab577f}{2dbc92b} & Bryan Liauw & Testing git and added changes to HW1.tex\\\hline
+\href{ssh://asherj@os-class.engr.oregonstate.edu/scratch/spring2017/13-03/commit/2dbc92bb1d5bd13fe53785d348475ffe2e21c7e8}{2dbc92b} & Josh Asher & Testing New branch\\\hline
+\href{ssh://struthj@os-class.engr.oregonstate.edu/scratch/spring2017/13-03/commit/b67dfc110164531a41258d3b958b7baf59fda87}{20d3cc1} & Joseph Struth & Added my code for concurrency 1.\\\hline
+\href{ssh://asherj@os-class.engr.oregonstate.edu/scratch/spring2017/13-03/commit/20d3cc110164531a41258d3b958b7baf59d0b38a}{20d3cc1} & Josh Asher & Added the qemu flags to the report for homework 1.\\
+\href{ssh://struthj@os-class.engr.oregonstate.edu/scratch/spring2017/13-03/commit/7dbc92bb1d5bdab577fbe8839aa4b12089b3459}{2dbc92b} & Joseph Struth & Pushed changes to HW1.tex\\\hline
+\href{https://github.com/struthj/CS444/commit/95f2f83c730dfb35f0292b3a825747fdde110c49}{95f2f83} & Joseph Struth & Updated Concurrency 1 to allow command line number of threads. Added Concurrency 2 works mostly but issue with segfault somewhere.\\\hline
+\href{ssh://liauwb@os-class.engr.oregonstate.edu/scratch/spring2017/13-03/commit/41258d3b958b7baf59b67dfc110164531afda87}{20d3cc1} & Bryan Liauw & More changes to HW1.tex.\\\hline
+\end{tabular}
+
+\section{Work Log}
+\begin{tabular}{| l | l | p{15cm} |}\textbf{Date} & \textbf{Author} & \textbf{Details}\\\hline
+4-9-2017 & Joseph Struth & Started Concurrency 1 Assignment.\\\hline
+4-9-2017 & Joseph Struth & Added references to Concurrency 1 Assignment.\\\hline
+4-9-2017 & Joseph Struth & Fixed Resize for Concurrency 1 Assignment.\\\hline
+4-13-2017 & Joseph Struth & During recitation created group folder, added readme, and cloned Yocto repository following to the "Make -j4 all" step.\\\hline
+4-13-2017 & Josh Asher & Logged into os class and fooled around.\\\hline
+4-15-2017 & Josh Asher & Took my turn to compile the code and run through the steps of homework one. That included starting the practice kernel on the qemu VM and then running the one we compiled.\\\hline
+4-15-2017 & Bryan Liauw & Done my own implementation of concurrency one with normal rand to understand how it works.\\\hline
+4-16-2017 & Josh Asher & Wrote the concurrency example myself and got it working. We will probably use Joseph's code it was more elegant.\\\hline
+4-17-2017 & Josh Asher & Check over Joseph's code and ran it for a long time looks good.\\\hline
+4-17-2017 & Josh Asher & Got git setup in the directory, having some issues but working on them.\\\hline
+4-17-2017 & Josh Asher & Added a reports directory with homework folders and posted a working tex template and Makefile.\\\hline
+4-18-2017 & Joseph Struth & Added Makefile for Concurrency 1. Refactored user specified number of threads. Added rdrand and assembly code.\\\hline
+4-19-2017 & Joseph Struth & Added Concurrency 1 to HW1 folder with Makefile and Readme.\\\hline
+4-20-17 & Bryan Liauw & Added answers to concurrency questions based on my perspective.\\\hline
+4-20-17 & Josh Asher & Added the command line section to the homework. Also added the explanation of the qemu flags to the reports.\\\hline
+4-20-17 & Josh Asher & Working on getting the git log in latex. Found a nice script and trying to implement it.\\\hline
+4-21-17 & Josh Asher & Got the git log script working and working on my part of the work log.\\\hline
+4-21-17 & Joseph Struth & Adding my contributions to the work log, adding bibliography, and moving Concurrency 1 to its own folder.\\\hline
+\end{tabular}
+
+\section{Bibliography}
+\nocite{*}
+\bibliographystyle{IEEEtran}
+\bibliography{HW1Bibliography.bib}
+
+
+\end{document}
