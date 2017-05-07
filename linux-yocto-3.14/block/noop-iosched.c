@@ -20,6 +20,36 @@ static void noop_merged_requests(struct request_queue *q, struct request *rq,
 
 static int noop_dispatch(struct request_queue *q, int force)
 {
+	/*struct noop_data *nd = q->elevator->elevator_data;
+
+	if (!list_empty(&nd->queue)) {
+		struct request *rq;
+		struct request *next;
+		struct request *prev;
+		rq = list_entry(&nd->queue, struct request, queuelist);
+		next = list_entry(nd->queue.next, struct request, queuelist);
+		prev = list_entry(nd->queue.prev, struct request, queuelist);
+
+		unsigned long back = abs((unsigned long)blk_rq_pos(prev)-
+		      (unsigned long)blk_rq_pos(rq));
+		unsigned long fron = abs((unsigned long)blk_rq_pos(next)-
+		      (unsigned long)blk_rq_pos(rq));
+		if(back<fron){
+			nd->queue = *nd->queue.prev;
+		}
+		else{
+			nd->queue = *nd->queue.next;
+		}
+		list_del_init(&rq->queuelist);
+		elv_dispatch_sort(q, rq);
+	if(rq_data_dir(rq) == 0){
+			printk("[SSTF] dsp READ %lu\n",rq->__sector);
+		} else {
+			printk("[SSTF] dsp WRITE %lu\n",rq->__sector);
+		}
+		return 1;
+	}
+	return 0;*/
 	struct noop_data *nd = q->elevator->elevator_data;
 
 	if (!list_empty(&nd->queue)) {
@@ -27,30 +57,39 @@ static int noop_dispatch(struct request_queue *q, int force)
 		rq = list_entry(nd->queue.next, struct request, queuelist);
 		list_del_init(&rq->queuelist);
 		elv_dispatch_sort(q, rq);
+		if(rq_data_dir(rq) == 0){
+			printk("[SSTF] dsp READ %lu\n",rq->__sector);
+		} else {
+			printk("[SSTF] dsp WRITE %lu\n",rq->__sector);
+		}
 		return 1;
 	}
+	
+
 	return 0;
 }
 
 static void noop_add_request(struct request_queue *q, struct request *rq)
 {
 	struct noop_data *nd = q->elevator->elevator_data;
+        struct request *temp;
+        if(list_empty(&nd->queue)){
+                list_add_tail(&rq->queuelist, &nd->queue);
+        }
+        else{
+                temp = list_entry(nd->queue.next,struct request,queuelist);
+                while(blk_rq_pos(rq)>blk_rq_pos(temp)){
+                        if(list_is_last(&temp->queuelist,&nd->queue)){
+                                break;
+                        }
+                        temp = list_entry(temp->queuelist.next,struct request, queuelist);
+                }
+                list_add(&rq->queuelist,&temp->queuelist);
+        }
 
-	list_add_tail(&rq->queuelist, &nd->queue);
 }
 
-static struct request *
-noop_former_request(struct request_queue *q, struct request *rq)
-{
-	struct noop_data *nd = q->elevator->elevator_data;
-
-	if (rq->queuelist.prev == &nd->queue)
-		return NULL;
-	return list_entry(rq->queuelist.prev, struct request, queuelist);
-}
-
-static struct request *
-noop_latter_request(struct request_queue *q, struct request *rq)
+static struct request * noop_latter_request(struct request_queue *q, struct request *rq)
 {
 	struct noop_data *nd = q->elevator->elevator_data;
 
@@ -59,8 +98,16 @@ noop_latter_request(struct request_queue *q, struct request *rq)
 	return list_entry(rq->queuelist.next, struct request, queuelist);
 }
 
-static int noop_init_queue(struct request_queue *q, struct elevator_type *e)
-{
+static struct request * noop_former_request(struct request_queue *q, 
+struct request *rq) {
+	struct noop_data *nd = q->elevator->elevator_data;
+
+	if (rq->queuelist.prev == &nd->queue)
+		return NULL;
+	return list_entry(rq->queuelist.prev, struct request, queuelist);
+}
+
+static int noop_init_queue(struct request_queue *q, struct elevator_type *e) {
 	struct noop_data *nd;
 	struct elevator_queue *eq;
 

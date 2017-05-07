@@ -8,18 +8,48 @@
 #include <linux/slab.h>
 #include <linux/init.h>
 
-struct sstf_data {
+struct noop_data {
 	struct list_head queue;
 };
 
-static void sstf_merged_requests(struct request_queue *q, struct request *rq,
+static void noop_merged_requests(struct request_queue *q, struct request *rq,
 				 struct request *next)
 {
 	list_del_init(&next->queuelist);
 }
 
-static int sstf_dispatch(struct request_queue *q, int force)
+static int noop_dispatch(struct request_queue *q, int force)
 {
+	/*struct noop_data *nd = q->elevator->elevator_data;
+
+	if (!list_empty(&nd->queue)) {
+		struct request *rq;
+		struct request *next;
+		struct request *prev;
+		rq = list_entry(&nd->queue, struct request, queuelist);
+		next = list_entry(nd->queue.next, struct request, queuelist);
+		prev = list_entry(nd->queue.prev, struct request, queuelist);
+
+		unsigned long back = abs((unsigned long)blk_rq_pos(prev)-
+		      (unsigned long)blk_rq_pos(rq));
+		unsigned long fron = abs((unsigned long)blk_rq_pos(next)-
+		      (unsigned long)blk_rq_pos(rq));
+		if(back<fron){
+			nd->queue = *nd->queue.prev;
+		}
+		else{
+			nd->queue = *nd->queue.next;
+		}
+		list_del_init(&rq->queuelist);
+		elv_dispatch_sort(q, rq);
+	if(rq_data_dir(rq) == 0){
+			printk("[SSTF] dsp READ %lu\n",rq->__sector);
+		} else {
+			printk("[SSTF] dsp WRITE %lu\n",rq->__sector);
+		}
+		return 1;
+	}
+	return 0;*/
 	struct noop_data *nd = q->elevator->elevator_data;
 
 	if (!list_empty(&nd->queue)) {
@@ -27,54 +57,58 @@ static int sstf_dispatch(struct request_queue *q, int force)
 		rq = list_entry(nd->queue.next, struct request, queuelist);
 		list_del_init(&rq->queuelist);
 		elv_dispatch_sort(q, rq);
+		if(rq_data_dir(rq) == 0){
+			printk("[SSTF] dsp READ %lu\n",rq->__sector);
+		} else {
+			printk("[SSTF] dsp WRITE %lu\n",rq->__sector);
+		}
 		return 1;
 	}
-	printk(KERN_INFO "Dispatching from sstf");
+	
+
 	return 0;
 }
 
-static void sstf_add_request(struct request_queue *q, struct request *rq)
+static void noop_add_request(struct request_queue *q, struct request *rq)
 {
-	struct sstf_data *nd = q->elevator->elevator_data;
-	struct request *temp;
-	if(list_empty(&nd->queue)){
-		list_add_tail(&rq->queuelist, &nd->queue);
-	}
-	else{
-	   	temp = list_entry(nd->queue.next,struct request,queuelist);
-		while(blk_rq_pos(rq)>blk_rq_pos(temp)){
-			if(list_is_last(&temp->queuelist,&nd->queue)){
-				break;
-			}
-			temp = list_entry(temp->queuelist.next,struct request, queuelist);
-		}
-		list_add(&rq->queuelist,&temp->queuelist);
-	}
+	struct noop_data *nd = q->elevator->elevator_data;
+        struct request *temp;
+        if(list_empty(&nd->queue)){
+                list_add_tail(&rq->queuelist, &nd->queue);
+        }
+        else{
+                temp = list_entry(nd->queue.next,struct request,queuelist);
+                while(blk_rq_pos(rq)>blk_rq_pos(temp)){
+                        if(list_is_last(&temp->queuelist,&nd->queue)){
+                                break;
+                        }
+                        temp = list_entry(temp->queuelist.next,struct request, queuelist);
+                }
+                list_add(&rq->queuelist,&temp->queuelist);
+        }
+
 }
 
-static struct request *
-sstf_former_request(struct request_queue *q, struct request *rq)
+static struct request * noop_latter_request(struct request_queue *q, struct request *rq)
 {
-	struct sstf_data *nd = q->elevator->elevator_data;
-
-	if (rq->queuelist.prev == &nd->queue)
-		return NULL;
-	return list_entry(rq->queuelist.prev, struct request, queuelist);
-}
-
-static struct request *
-sstf_latter_request(struct request_queue *q, struct request *rq)
-{
-	struct sstf_data *nd = q->elevator->elevator_data;
+	struct noop_data *nd = q->elevator->elevator_data;
 
 	if (rq->queuelist.next == &nd->queue)
 		return NULL;
 	return list_entry(rq->queuelist.next, struct request, queuelist);
 }
 
-static int sstf_init_queue(struct request_queue *q, struct elevator_type *e)
-{
-	struct sstf_data *nd;
+static struct request * noop_former_request(struct request_queue *q, 
+struct request *rq) {
+	struct noop_data *nd = q->elevator->elevator_data;
+
+	if (rq->queuelist.prev == &nd->queue)
+		return NULL;
+	return list_entry(rq->queuelist.prev, struct request, queuelist);
+}
+
+static int noop_init_queue(struct request_queue *q, struct elevator_type *e) {
+	struct noop_data *nd;
 	struct elevator_queue *eq;
 
 	eq = elevator_alloc(q, e);
@@ -89,7 +123,6 @@ static int sstf_init_queue(struct request_queue *q, struct elevator_type *e)
 	eq->elevator_data = nd;
 
 	INIT_LIST_HEAD(&nd->queue);
-	printk(KERN_INFO "SSTF Initializing");
 
 	spin_lock_irq(q->queue_lock);
 	q->elevator = eq;
@@ -97,42 +130,42 @@ static int sstf_init_queue(struct request_queue *q, struct elevator_type *e)
 	return 0;
 }
 
-static void sstf_exit_queue(struct elevator_queue *e)
+static void noop_exit_queue(struct elevator_queue *e)
 {
-	struct sstf_data *nd = e->elevator_data;
+	struct noop_data *nd = e->elevator_data;
 
 	BUG_ON(!list_empty(&nd->queue));
 	kfree(nd);
 }
 
-static struct elevator_type elevator_sstf = {
+static struct elevator_type elevator_noop = {
 	.ops = {
-		.elevator_merge_req_fn		= sstf_merged_requests,
-		.elevator_dispatch_fn		= sstf_dispatch,
-		.elevator_add_req_fn		= sstf_add_request,
-		.elevator_former_req_fn		= sstf_former_request,
-		.elevator_latter_req_fn		= sstf_latter_request,
-		.elevator_init_fn		= sstf_init_queue,
-		.elevator_exit_fn		= sstf_exit_queue,
+		.elevator_merge_req_fn		= noop_merged_requests,
+		.elevator_dispatch_fn		= noop_dispatch,
+		.elevator_add_req_fn		= noop_add_request,
+		.elevator_former_req_fn		= noop_former_request,
+		.elevator_latter_req_fn		= noop_latter_request,
+		.elevator_init_fn		= noop_init_queue,
+		.elevator_exit_fn		= noop_exit_queue,
 	},
-	.elevator_name = "look",
+	.elevator_name = "noop",
 	.elevator_owner = THIS_MODULE,
 };
 
-static int __init sstf_init(void)
+static int __init noop_init(void)
 {
-	return elv_register(&elevator_sstf);
+	return elv_register(&elevator_noop);
 }
 
-static void __exit sstf_exit(void)
+static void __exit noop_exit(void)
 {
-	elv_unregister(&elevator_sstf);
+	elv_unregister(&elevator_noop);
 }
 
-module_init(sstf_init);
-module_exit(sstf_exit);
+module_init(noop_init);
+module_exit(noop_exit);
 
 
-MODULE_AUTHOR("Bryan Liauw, Josh Asher, Joseph Struth");
+MODULE_AUTHOR("Jens Axboe");
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("SSTF IO scheduler");
+MODULE_DESCRIPTION("No-op IO scheduler");
