@@ -1,0 +1,131 @@
+\documentclass[10pt,draftclsnofoot,onecolumn, compsoc]{IEEEtran}
+\usepackage{geometry}
+\geometry{textheight=9.5in, textwidth=7in}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+
+
+\singlespacing
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\lstdefinestyle{customc}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=L,
+  xleftmargin=\parindent,
+  language=C,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\cred,
+  identifierstyle=\cblue,
+  stringstyle=\color{orange},
+}
+
+
+%% The following metadata will show up in the PDF properties
+% \hypersetup{
+%   colorlinks = false,
+%   urlcolor = black,
+%   pdfauthor = {\name},
+%   pdfkeywords = {cs444 ``operating systems'' files filesystem I/O},
+%   pdftitle = {CS 444 Project 3: The Kernel Crypto API },
+%   pdfsubject = {CS 444 Project 3},
+%   pdfpagemode = UseNone
+% }
+
+\begin{document}
+%\title{Team 13-03}
+%\author{Joseph Struth  |  Josh Asher  |   Bryan Liauw}
+%\date{}
+%\maketitle
+\begin{titlepage}
+	\centering
+	{\scshape\LARGE Team 13-03 \par}
+	\vspace{1cm}
+	{\scshape\Large Joseph Struth  |  Josh Asher  |   Bryan Liauw\par}
+    \vspace{1cm}
+    	{\scshape\Large Project 3: The Kernel Crypto API \par}
+	\vspace{1.5cm}
+	{\huge\bfseries CS444\par}
+	\vspace{2cm}
+	{\Large\itshape Spring 2017\par}
+	\vspace{4cm}
+	{\large Abstract\par}
+	\vspace{1cm}
+	Our second project in this class involves implementing our own module using the Linux Kernel's Crypto API to add encryption to our I/O block device.
+	This document takes you through the process of designing and implementing our block cipher, adding the crypto key to the module, and adding a module to the kernel.
+	\vfill
+
+% Bottom of the page
+	{\large \today\par}
+\end{titlepage}
+
+
+%example of how to include code in document, uncomment if you want to add any
+%
+%\begin{lstlisting}[language=C, style=customc]
+%struct sstf_data {
+%       struct list_head queue;
+%};
+%\end{lstlisting}
+%
+
+%Answer the following questions in sufficient detail:
+%1) What do you think the main point of this assignment is?
+%2) How did you personally approach the problem? Design decisions, algorithm, etc.
+%3) How did you ensure your solution was correct? Testing details, for instance.
+%4) What did you learn?
+
+
+\section{Project 2 Questions}
+\subsection{Question 1}
+The main point of this assignment is to take our understanding of how Input and output works and teach us how to interact with block devices at the kernel level. This project teaches us how to us the Linux crypto API, and how to add a module to the kernel. 
+\subsection{Question 2}
+Our strategy is to look into the examples of the existing block devices in the linux yocto. Then, with the LD33 documentation provided in the website, we implemented the sbull driver. Afterwards, we create an encryption function and several tweaking to fit the homework problem
+
+
+\subsection{Question 3}
+We tested the module by loading it to the kernel and then mounting the device. Afterwards, we tried reading and writing to it by adding files into it and making sure that it is encrypted when viewed without the proper encryption key.
+
+\subsection{Question 4}
+In this project we learned a lot more about how the kernel treats I/O and how I/O block devices work. We also learned more about how to change components in the Linux kernel through modifying adding a module and using the kernel cryptographic API. It also taught us about manipulating memory and viewing the contents of memory to verify our encryption had worked.
+
+\section{Git Log}
+
+\begin{tabular}{| l | l | p{15cm} |}\textbf{Detail} & \textbf{Author} & \textbf{Description}\\\hline
+\href{https://github.com/struthj/CS444/commit/51a050fe7c7f2831eebbac1a184406fcee8775f6}{51a050f} & Joseph Struth & Finished concurrency 3 Search, Insert, Delete.\\\hline
+\href{https://github.com/struthj/CS444/commit/38df78912a1aea97e17e62ea8517e8b5a40e630a} {38df789} & Joseph Struth & Re-factor concurrency 3: Added semaphores and messages to alert blocking.\\\hline
+\href{https://github.com/struthj/CS444-1303/commit/b2ea5ee982d97f6e618511c1c157c7f63ed53397}{b2ea5ee} & Joshua Asher & Added assignment branch and Basic Sbull added (with module param) .\\\hline
+\end{tabular}
+
+\section{Work Log}
+
+\begin{tabular}{| l | l | p{15cm} |}\textbf{Date} & \textbf{Author} & \textbf{Details}\\\hline
+5-16-2017 & Joseph Struth & Finished -Concurrency 3.\\\hline
+5-17-2017 & Joseph Struth & Re-factored Concurrency 3 with semaphores and blocking messages.\\\hline
+5-17-2017 & Joshua Asher & Created assignment branch, added basic Sbull with module parameters.\\\hline
+5-20-2017 & Joshua Asher & Setup osurd on the kernel in test directory, worked on adding module.\\\hline
+5-21-2017 & Joshua Asher & Working on osurd.c, displaying allocated memory, and entering key.\\\hline
+5-21-2017 & Brian Liauw & Working on osurd and kernel module. .\\\hline
+5-21-2017 & Brian Liauw & Working on simulating the write by inputing a file, and mounting device.\\\hline
+5-22-2017 & Brian Liauw Josh Asher & Compiling a list of entered commands to test module.\\\hline
+5-22-2017 & Joseph Struth & Started project writeup.\\\hline
+5-22-2017 & Brian Liauw & Worked on project writeup.\\\hline
+\end{tabular}
+
+\section{Bibliography}
+\nocite{*}
+\bibliographystyle{IEEEtran}
+\bibliography{HW1Bibliography.bib}
+
+
+\end{document}
