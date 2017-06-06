@@ -1,0 +1,125 @@
+\documentclass[10pt,draftclsnofoot,onecolumn, compsoc]{IEEEtran}
+\usepackage{geometry}
+\geometry{textheight=9.5in, textwidth=7in}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+
+
+\singlespacing
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\lstdefinestyle{customc}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=L,
+  xleftmargin=\parindent,
+  language=C,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\cred,
+  identifierstyle=\cblue,
+  stringstyle=\color{orange},
+}
+
+%% The following metadata will show up in the PDF properties
+% \hypersetup{
+%   colorlinks = false,
+%   urlcolor = black,
+%   pdfauthor = {\name},
+%   pdfkeywords = {cs444 ``operating systems'' SLOB SLAB},
+%   pdftitle = {CS 444 Project 4: The SLOB SLAB},
+%   pdfsubject = {CS 444 Project 4},
+%   pdfpagemode = UseNone
+% }
+
+\begin{document}
+%\title{Team 13-03}
+%\author{Joseph Struth  |  Josh Asher  |   Bryan Liauw}
+%\date{}
+%\maketitle
+\begin{titlepage}
+	\centering
+	{\scshape\LARGE Team 13-03 \par}
+	\vspace{1cm}
+	{\scshape\Large Joseph Struth  |  Josh Asher  |   Bryan Liauw\par}
+    \vspace{1cm}
+    	{\scshape\Large Project 4: The SLOB SLAB \par}
+	\vspace{1.5cm}
+	{\huge\bfseries CS444\par}
+	\vspace{2cm}
+	{\Large\itshape Spring 2017\par}
+	\vspace{4cm}
+	{\large Abstract\par}
+	\vspace{1cm}
+	Our fourth project involves implementing a best fit allocation algorithm.
+	This document takes you through the process of designing and implementing our SLAB best fit algorithm, and comparing the efficiency of first fit vs best fit algorithms.
+	\vfill
+
+% Bottom of the page
+	{\large \today\par}
+\end{titlepage}
+
+
+%example of how to include code in document, uncomment if you want to add any
+%
+%\begin{lstlisting}[language=C, style=customc]
+%struct sstf_data {
+%       struct list_head queue;
+%};
+%\end{lstlisting}
+%
+
+%Answer the following questions in sufficient detail:
+%1) What do you think the main point of this assignment is?
+
+\section{Project 4 Questions}
+\subsection{Question 1}
+The main point of this assignment is to take our understanding of how memory works, and build on it by looking into how the Linux kernel uses the Simple list of blocks (SLOB) memory allocator and how it compares to a best-fit algorithm like the SLAB memory allocator. Then we will compare fragmentation to find the efficiency of each algorithm. We will also use system calls to track memory usage.
+
+%2) How did you personally approach the problem? Design decisions, algorithm, etc.
+\subsection{Question 2}
+
+
+%3) How did you ensure your solution was correct? Testing details, for instance.
+\subsection{Question 3}
+
+%4) What did you learn?
+\subsection{Question 4}
+In this project we learned a lot more about how the kernel handles memory allocation and how efficient best-fit memory allocation is to first fit. We also learned how to use system calls to track memory usage in the kernel. We learned that the first fit algorithm although simple is very inefficient (We had 8 percent efficiency), and that best-fit is much more efficient (We had 96 percent efficiency). This final assignment built on our previous knowledge of creating patches for the kernel as well.
+\section{Git Log}
+
+\begin{tabular}{| l | l | p{15cm} |}\textbf{Detail} & \textbf{Author} & \textbf{Description}\\\hline
+\href{https://github.com/struthj/CS444/commit/795663bbc8dc4a8ce82794b8a32bfa0afd103d10}{795663b} & Joseph Struth & Finished concurrency 4 Sleeping Barbers problem.\\\hline
+\href{https://github.com/struthj/CS444/commit/227152f32c8c770360b7d7a09730de14bc33640f}{227152f} & Joseph Struth & Added concurrency 4 part 1 Processes and Resources.\\\hline
+\href{https://github.com/struthj/CS444/commit/1dd29b2a4a7a1dbf126197f7426facef99ece345}{1dd29b2} & Joseph Struth & Added Cigarette Smokers problem.\\\hline
+\end{tabular}
+
+\section{Work Log}
+
+\begin{tabular}{| l | l | p{15cm} |}\textbf{Date} & \textbf{Author} & \textbf{Details}\\\hline
+5-25-2017 & Joseph Struth & Finished Concurrency 4, Part 1 and 2.\\\hline
+5-26-2017 & Joseph Struth & Added Concurrency 5 .\\\hline
+5-29-2017 & Joshua Asher & Started HW4 working on slob.c.\\\hline
+5-29-2017 & Brian Liauw & Added best fit and added print statements.\\\hline
+5-31-2017 & Brian Liauw Josh Asher & Working on system calls and testing.\\\hline
+6-4-2017 & Joshua Asher & Using GDB to demonstrate best fit algorithm .\\\hline
+6-4-2017 & Joshua Asher & Working on creating patch.\\\hline
+6-5-2017 & Joseph Struth & Started project writeup.\\\hline
+\end{tabular}
+
+\section{Bibliography}
+\nocite{*}
+\bibliographystyle{IEEEtran}
+\bibliography{HW1Bibliography.bib}
+
+
+\end{document}
